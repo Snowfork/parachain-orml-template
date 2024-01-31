@@ -1,0 +1,138 @@
+[workspace.package]
+authors = ["Snowfork <contact@snowfork.com>"]
+edition = "2021"
+repository = "https://github.com/snowfork/snowbridge.git"
+
+[workspace]
+resolver = "2"
+members = [
+	"node",
+	"orml/currencies",
+	"orml/tokens",
+	"orml/tokens/runtime-api",
+	"orml/traits",
+	"orml/utilities",
+	"pallets/template",
+	"runtime",
+]
+
+
+[workspace.lints.rust]
+suspicious_double_ref_op = { level = "allow", priority = 2 }
+
+[workspace.lints.clippy]
+all = { level = "allow", priority = 0 }
+correctness = { level = "warn", priority = 1 }
+complexity = { level = "warn", priority = 1 }
+if-same-then-else = { level = "allow", priority = 2 }
+zero-prefixed-literal = { level = "allow", priority = 2 }            # 00_1000_000
+type_complexity = { level = "allow", priority = 2 }                  # raison d'etre
+nonminimal-bool = { level = "allow", priority = 2 }                  # maybe
+borrowed-box = { level = "allow", priority = 2 }                     # Reasonable to fix this one
+too-many-arguments = { level = "allow", priority = 2 }               # (Turning this on would lead to)
+needless-lifetimes = { level = "allow", priority = 2 }               # generated code
+unnecessary_cast = { level = "allow", priority = 2 }                 # Types may change
+identity-op = { level = "allow", priority = 2 }                      # One case where we do 0 +
+useless_conversion = { level = "allow", priority = 2 }               # Types may change
+unit_arg = { level = "allow", priority = 2 }                         # stylistic
+option-map-unit-fn = { level = "allow", priority = 2 }               # stylistic
+bind_instead_of_map = { level = "allow", priority = 2 }              # stylistic
+erasing_op = { level = "allow", priority = 2 }                       # E.g. 0 * DOLLARS
+eq_op = { level = "allow", priority = 2 }                            # In tests we test equality.
+while_immutable_condition = { level = "allow", priority = 2 }        # false positives
+needless_option_as_deref = { level = "allow", priority = 2 }         # false positives
+derivable_impls = { level = "allow", priority = 2 }                  # false positives
+stable_sort_primitive = { level = "allow", priority = 2 }            # prefer stable sort
+extra-unused-type-parameters = { level = "allow", priority = 2 }     # stylistic
+default_constructed_unit_structs = { level = "allow", priority = 2 } # stylistic
+
+[workspace.dependencies]
+# Frame
+frame-benchmarking = { path = "../polkadot-sdk/substrate/frame/benchmarking", default-features = false}
+frame-benchmarking-cli = { path = "../polkadot-sdk/substrate/utils/frame/benchmarking-cli" }
+frame-support = { path = "../polkadot-sdk/substrate/frame/support", default-features = false }
+frame-executive = { path = "../polkadot-sdk/substrate/frame/executive", default-features = false }
+frame-system = { path = "../polkadot-sdk/substrate/frame/system", default-features = false }
+frame-system-benchmarking = { path = "../polkadot-sdk/substrate/frame/system/benchmarking", default-features = false }
+frame-system-rpc-runtime-api = { path = "../polkadot-sdk/substrate/frame/system/rpc/runtime-api", default-features = false }
+frame-try-runtime = { path = "../polkadot-sdk/substrate/frame/try-runtime", default-features = false }
+sc-basic-authorship = { path = "../polkadot-sdk/substrate/client/basic-authorship" }
+sc-chain-spec = { path = "../polkadot-sdk/substrate/client/chain-spec" }
+sc-cli = { path = "../polkadot-sdk/substrate/client/cli" }
+sc-client-api = { path = "../polkadot-sdk/substrate/client/api" }
+sc-offchain = { path = "../polkadot-sdk/substrate/client/offchain" }
+sc-consensus = { path = "../polkadot-sdk/substrate/client/consensus/common" }
+sc-executor = { path = "../polkadot-sdk/substrate/client/executor" }
+sc-network = { path = "../polkadot-sdk/substrate/client/network" }
+sc-network-sync = { path = "../polkadot-sdk/substrate/client/network/sync" }
+sc-rpc = { path = "../polkadot-sdk/substrate/client/rpc" }
+sc-service = { path = "../polkadot-sdk/substrate/client/service" }
+sc-sysinfo = { path = "../polkadot-sdk/substrate/client/sysinfo" }
+sc-telemetry = { path = "../polkadot-sdk/substrate/client/telemetry" }
+sc-tracing = { path = "../polkadot-sdk/substrate/client/tracing" }
+sc-transaction-pool = { path = "../polkadot-sdk/substrate/client/transaction-pool" }
+sc-transaction-pool-api = { path = "../polkadot-sdk/substrate/client/transaction-pool/api" }
+sp-api = { path = "../polkadot-sdk/substrate/primitives/api", default-features = false }
+sp-arithmetic = { path = "../polkadot-sdk/substrate/primitives/arithmetic", default-features = false }
+sp-block-builder = { path = "../polkadot-sdk/substrate/primitives/block-builder", default-features = false }
+sp-blockchain = { path = "../polkadot-sdk/substrate/primitives/blockchain", default-features = false }
+sp-consensus-aura = { path = "../polkadot-sdk/substrate/primitives/consensus/aura", default-features = false }
+sp-core = { path = "../polkadot-sdk/substrate/primitives/core", default-features = false }
+sp-keystore = { path = "../polkadot-sdk/substrate/primitives/keystore", default-features = false }
+sp-genesis-builder = { path = "../polkadot-sdk/substrate/primitives/genesis-builder", default-features = false }
+sp-inherents = { path = "../polkadot-sdk/substrate/primitives/inherents", default-features = false }
+sp-offchain = { path = "../polkadot-sdk/substrate/primitives/offchain", default-features = false }
+sp-session = { path = "../polkadot-sdk/substrate/primitives/session", default-features = false }
+sp-transaction-pool = { path = "../polkadot-sdk/substrate/primitives/transaction-pool", default-features = false }
+sp-version = { path = "../polkadot-sdk/substrate/primitives/version", default-features = false }
+sp-io = { path = "../polkadot-sdk/substrate/primitives/io", default-features = false }
+sp-std = { path = "../polkadot-sdk/substrate/primitives/std", default-features = false }
+sp-runtime = { path = "../polkadot-sdk/substrate/primitives/runtime", default-features = false }
+sp-timestamp = { path = "../polkadot-sdk/substrate/primitives/timestamp", default-features = false }
+substrate-frame-rpc-system = { path = "../polkadot-sdk/substrate/utils/frame/rpc/system" }
+substrate-prometheus-endpoint = { path = "../polkadot-sdk/substrate/utils/prometheus" }
+substrate-build-script-utils = { path = "../polkadot-sdk/substrate/utils/build-script-utils" }
+pallet-transaction-payment-rpc = { path = "../polkadot-sdk/substrate/frame/transaction-payment/rpc" }
+pallet-aura = { path = "../polkadot-sdk/substrate/frame/aura", default-features = false }
+pallet-authorship = { path = "../polkadot-sdk/substrate/frame/authorship", default-features = false }
+pallet-balances = { path = "../polkadot-sdk/substrate/frame/balances", default-features = false }
+pallet-message-queue = { path = "../polkadot-sdk/substrate/frame/message-queue", default-features = false }
+pallet-session = { path = "../polkadot-sdk/substrate/frame/session", default-features = false }
+pallet-sudo = { path = "../polkadot-sdk/substrate/frame/sudo", default-features = false }
+pallet-timestamp = { path = "../polkadot-sdk/substrate/frame/timestamp", default-features = false }
+pallet-transaction-payment = { path = "../polkadot-sdk/substrate/frame/transaction-payment", default-features = false }
+pallet-transaction-payment-rpc-runtime-api = { path = "../polkadot-sdk/substrate/frame/transaction-payment/rpc/runtime-api", default-features = false }
+substrate-wasm-builder = { path = "../polkadot-sdk/substrate/utils/wasm-builder" }
+
+# Polkadot
+polkadot-cli = { path = "../polkadot-sdk/polkadot/cli" }
+polkadot-primitives = { path = "../polkadot-sdk/polkadot/primitives", default-features = false }
+xcm = { package = "staging-xcm", path = "../polkadot-sdk/polkadot/xcm", default-features = false }
+pallet-xcm = { path = "../polkadot-sdk/polkadot/xcm/pallet-xcm", default-features = false }
+polkadot-parachain-primitives = { path = "../polkadot-sdk/polkadot/parachain", default-features = false }
+polkadot-runtime-common = { path = "../polkadot-sdk/polkadot/runtime/common", default-features = false }
+xcm-builder = { package = "staging-xcm-builder", path = "../polkadot-sdk/polkadot/xcm/xcm-builder", default-features = false }
+xcm-executor = { package = "staging-xcm-executor", path = "../polkadot-sdk/polkadot/xcm/xcm-executor", default-features = false }
+
+# Cumulus
+cumulus-client-cli = { path = "../polkadot-sdk/cumulus/client/cli" }
+cumulus-client-collator = { path = "../polkadot-sdk/cumulus/client/collator" }
+cumulus-client-consensus-aura = { path = "../polkadot-sdk/cumulus/client/consensus/aura" }
+cumulus-client-consensus-common = { path = "../polkadot-sdk/cumulus/client/consensus/common" }
+cumulus-client-consensus-proposer = { path = "../polkadot-sdk/cumulus/client/consensus/proposer" }
+cumulus-client-service = { path = "../polkadot-sdk/cumulus/client/service" }
+cumulus-primitives-core = { path = "../polkadot-sdk/cumulus/primitives/core", default-features = false }
+cumulus-primitives-parachain-inherent = { path = "../polkadot-sdk/cumulus/primitives/parachain-inherent", default-features = false }
+cumulus-relay-chain-interface = { path = "../polkadot-sdk/cumulus/client/relay-chain-interface", default-features = false }
+cumulus-pallet-aura-ext = { path = "../polkadot-sdk/cumulus/pallets/aura-ext", default-features = false }
+cumulus-pallet-dmp-queue = { path = "../polkadot-sdk/cumulus/pallets/dmp-queue", default-features = false }
+cumulus-pallet-parachain-system = { path = "../polkadot-sdk/cumulus/pallets/parachain-system", default-features = false }
+cumulus-pallet-session-benchmarking = { path = "../polkadot-sdk/cumulus/pallets/session-benchmarking", default-features = false }
+cumulus-pallet-xcm = { path = "../polkadot-sdk/cumulus/pallets/xcm", default-features = false }
+cumulus-pallet-xcmp-queue = { path = "../polkadot-sdk/cumulus/pallets/xcmp-queue", default-features = false }
+cumulus-primitives-utility = { path = "../polkadot-sdk/cumulus/primitives/utility", default-features = false }
+pallet-collator-selection = { path = "../polkadot-sdk/cumulus/pallets/collator-selection", default-features = false }
+parachains-common = { path = "../polkadot-sdk/cumulus/parachains/common", default-features = false }
+parachain-info = { package = "staging-parachain-info", path = "../polkadot-sdk/cumulus/parachains/pallets/parachain-info", default-features = false }
+
+
