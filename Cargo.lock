@@ -6055,6 +6055,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "orml-xcm-support"
+version = "0.6.7"
+dependencies = [
+ "frame-support",
+ "orml-traits",
+ "parity-scale-codec",
+ "sp-runtime",
+ "sp-std 8.0.0",
+ "staging-xcm",
+ "staging-xcm-executor",
+]
+
+[[package]]
 name = "pallet-asset-conversion"
 version = "4.0.0-dev"
 dependencies = [

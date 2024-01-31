@@ -12,6 +12,7 @@ members = [
 	"orml/tokens/runtime-api",
 	"orml/traits",
 	"orml/utilities",
+	"orml/xcm-support",
 	"pallets/template",
 	"runtime",
 ]
@@ -48,7 +49,7 @@ default_constructed_unit_structs = { level = "allow", priority = 2 } # stylistic
 
 [workspace.dependencies]
 # Frame
-frame-benchmarking = { path = "../polkadot-sdk/substrate/frame/benchmarking", default-features = false}
+frame-benchmarking = { path = "../polkadot-sdk/substrate/frame/benchmarking", default-features = false }
 frame-benchmarking-cli = { path = "../polkadot-sdk/substrate/utils/frame/benchmarking-cli" }
 frame-support = { path = "../polkadot-sdk/substrate/frame/support", default-features = false }
 frame-executive = { path = "../polkadot-sdk/substrate/frame/executive", default-features = false }
@@ -134,5 +135,3 @@ cumulus-primitives-utility = { path = "../polkadot-sdk/cumulus/primitives/utilit
 pallet-collator-selection = { path = "../polkadot-sdk/cumulus/pallets/collator-selection", default-features = false }
 parachains-common = { path = "../polkadot-sdk/cumulus/parachains/common", default-features = false }
 parachain-info = { package = "staging-parachain-info", path = "../polkadot-sdk/cumulus/parachains/pallets/parachain-info", default-features = false }
-
-
