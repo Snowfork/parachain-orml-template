@@ -19,7 +19,10 @@ use emulated_integration_tests_common::xcm_emulator::ConvertLocation;
 use frame_support::pallet_prelude::TypeInfo;
 use hex_literal::hex;
 use parachains_common::rococo::snowbridge::EthereumNetwork;
-use rococo_system_emulated_network::BridgeHubRococoParaSender as BridgeHubRococoSender;
+use rococo_system_emulated_network::{
+	orml_emulated_chain::OrmlTemplate, BridgeHubRococoParaSender as BridgeHubRococoSender,
+	OrmlTemplatePara,
+};
 use snowbridge_core::outbound::OperatingMode;
 use snowbridge_pallet_inbound_queue_fixtures::{
 	register_token::make_register_token_message,
@@ -538,5 +541,78 @@ fn send_token_from_ethereum_to_asset_hub_fail_for_insufficient_fund() {
 
 	BridgeHubRococo::execute_with(|| {
 		assert_err!(send_inbound_message(make_register_token_message()), Arithmetic(Underflow));
+	});
+}
+
+#[test]
+fn send_token_from_ethereum_to_orml_chain() {
+	let asset_hub_sovereign = BridgeHubRococo::sovereign_account_id_of(Location::new(
+		1,
+		[Parachain(AssetHubRococo::para_id().into())],
+	));
+	// Fund AssetHub sovereign account so it can pay execution fees for the asset transfer
+	BridgeHubRococo::fund_accounts(vec![(asset_hub_sovereign.clone(), INITIAL_FUND)]);
+
+	// Fund PenPal sender and receiver
+	OrmlTemplatePara::fund_accounts(vec![
+		(OrmlReceiver::get(), INITIAL_FUND),
+		(OrmlSender::get(), INITIAL_FUND),
+	]);
+
+	// The Weth asset location, identified by the contract address on Ethereum
+	let weth_asset_location: Location =
+		(Parent, Parent, EthereumNetwork::get(), AccountKey20 { network: None, key: WETH }).into();
+	// Converts the Weth asset location into an asset ID
+	let weth_asset_id: v3::Location = weth_asset_location.try_into().unwrap();
+
+	let origin_location = (Parent, Parent, EthereumNetwork::get()).into();
+
+	// Fund ethereum sovereign on AssetHub
+	let ethereum_sovereign: AccountId =
+		GlobalConsensusEthereumConvertsFor::<AccountId>::convert_location(&origin_location)
+			.unwrap();
+	AssetHubRococo::fund_accounts(vec![(ethereum_sovereign.clone(), INITIAL_FUND)]);
+
+	// Todo: Create asset on the Orml parachain.
+	OrmlTemplatePara::execute_with(|| {});
+
+	BridgeHubRococo::execute_with(|| {
+		type RuntimeEvent = <BridgeHubRococo as Chain>::RuntimeEvent;
+
+		// Construct RegisterToken message and sent to inbound queue
+		send_inbound_message(make_register_token_message()).unwrap();
+
+		// Todo: Construct SendToken message and sent to inbound queue
+		// send_inbound_message(make_send_token_to_penpal_message()).unwrap();
+
+		assert_expected_events!(
+			BridgeHubRococo,
+			vec![
+				RuntimeEvent::XcmpQueue(cumulus_pallet_xcmp_queue::Event::XcmpMessageSent { .. }) => {},
+			]
+		);
+	});
+
+	AssetHubRococo::execute_with(|| {
+		type RuntimeEvent = <AssetHubRococo as Chain>::RuntimeEvent;
+		// Todo: Check that the assets were issued on AssetHub
+		// assert_expected_events!(
+		// 	AssetHubRococo,
+		// 	vec![
+		// 		RuntimeEvent::ForeignAssets(pallet_assets::Event::Issued { .. }) => {},
+		// 		RuntimeEvent::XcmpQueue(cumulus_pallet_xcmp_queue::Event::XcmpMessageSent { .. }) => {},
+		// 	]
+		// );
+	});
+
+	OrmlTemplatePara::execute_with(|| {
+		type RuntimeEvent = <PenpalA as Chain>::RuntimeEvent;
+		// Todo: Check that the assets were issued on PenPal
+		// assert_expected_events!(
+		// 	PenpalA,
+		// 	vec![
+		// 		RuntimeEvent::ForeignAssets(pallet_assets::Event::Issued { .. }) => {},
+		// 	]
+		// );
 	});
 }

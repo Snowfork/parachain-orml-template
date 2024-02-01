@@ -41,10 +41,10 @@ cumulus-pallet-xcmp-queue = { path = "../../../../../../polkadot-sdk/cumulus/pal
 cumulus-pallet-dmp-queue = { path = "../../../../../../polkadot-sdk/cumulus/pallets/dmp-queue", default-features = false }
 bridge-hub-rococo-runtime = { path = "../../../../../../polkadot-sdk/cumulus/parachains/runtimes/bridge-hubs/bridge-hub-rococo", default-features = false }
 emulated-integration-tests-common = { path = "../../../common", default-features = false }
-#rococo-westend-system-emulated-network = { path = "../../../networks/rococo-westend-system" }
 rococo-system-emulated-network = { path = "../../../networks/rococo-system" }
 penpal-runtime = { path = "../../../../../../polkadot-sdk/cumulus/parachains/runtimes/testing/penpal", default-features = false }
 asset-hub-rococo-runtime = { path = "../../../../../../polkadot-sdk/cumulus/parachains/runtimes/assets/asset-hub-rococo", default-features = false }
+parachain-orml-template-runtime = { path = "../../../../../runtime", default-features = false }
 
 # Snowbridge
 snowbridge-core = { path = "../../../../../../parachain/primitives/core", default-features = false }

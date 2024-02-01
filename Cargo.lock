@@ -1729,6 +1729,7 @@ dependencies = [
  "pallet-bridge-messages",
  "pallet-message-queue",
  "pallet-xcm",
+ "parachain-orml-template-runtime",
  "parachains-common",
  "parity-scale-codec",
  "penpal-runtime",
