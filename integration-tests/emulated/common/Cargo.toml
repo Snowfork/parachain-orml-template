@@ -1,0 +1,49 @@
+[package]
+name = "emulated-integration-tests-common"
+version = "1.0.0"
+authors.workspace = true
+edition.workspace = true
+license = "Apache-2.0"
+description = "Common resources for integration testing with xcm-emulator"
+
+[lints]
+workspace = true
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.4.0", default-features = false }
+paste = "1.0.14"
+serde_json = "1.0.111"
+
+# Substrate
+grandpa = { package = "sc-consensus-grandpa", path = "../../../../polkadot-sdk/substrate/client/consensus/grandpa" }
+sp-authority-discovery = { path = "../../../../polkadot-sdk/substrate/primitives/authority-discovery" }
+sp-runtime = { path = "../../../../polkadot-sdk/substrate/primitives/runtime" }
+frame-support = { path = "../../../../polkadot-sdk/substrate/frame/support" }
+sp-core = { path = "../../../../polkadot-sdk/substrate/primitives/core" }
+sp-consensus-babe = { path = "../../../../polkadot-sdk/substrate/primitives/consensus/babe" }
+pallet-assets = { path = "../../../../polkadot-sdk/substrate/frame/assets" }
+pallet-balances = { path = "../../../../polkadot-sdk/substrate/frame/balances" }
+pallet-message-queue = { path = "../../../../polkadot-sdk/substrate/frame/message-queue" }
+pallet-im-online = { path = "../../../../polkadot-sdk/substrate/frame/im-online" }
+beefy-primitives = { package = "sp-consensus-beefy", path = "../../../../polkadot-sdk/substrate/primitives/consensus/beefy" }
+
+# Polkadot
+polkadot-service = { path = "../../../../polkadot-sdk/polkadot/node/service", default-features = false, features = ["full-node"] }
+polkadot-primitives = { path = "../../../../polkadot-sdk/polkadot/primitives" }
+polkadot-runtime-parachains = { path = "../../../../polkadot-sdk/polkadot/runtime/parachains" }
+xcm = { package = "staging-xcm", path = "../../../../polkadot-sdk/polkadot/xcm" }
+pallet-xcm = { path = "../../../../polkadot-sdk/polkadot/xcm/pallet-xcm" }
+
+# Cumulus
+parachains-common = { path = "../../../../polkadot-sdk/cumulus/parachains/common" }
+cumulus-primitives-core = { path = "../../../../polkadot-sdk/cumulus/primitives/core" }
+xcm-emulator = { path = "../../../../polkadot-sdk/cumulus/xcm/xcm-emulator" }
+cumulus-pallet-xcmp-queue = { path = "../../../../polkadot-sdk/cumulus/pallets/xcmp-queue" }
+cumulus-pallet-parachain-system = { path = "../../../../polkadot-sdk/cumulus/pallets/parachain-system" }
+asset-test-utils = { path = "../../../../polkadot-sdk/cumulus/parachains/runtimes/assets/test-utils" }
+
+# Bridges
+bp-messages = { path = "../../../../polkadot-sdk/bridges/primitives/messages" }
+pallet-bridge-messages = { path = "../../../../polkadot-sdk/bridges/modules/messages" }
+bridge-runtime-common = { path = "../../../../polkadot-sdk/bridges/bin/runtime-common" }
+

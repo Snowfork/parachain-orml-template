@@ -1,0 +1,32 @@
+[package]
+name = "rococo-emulated-chain"
+version = "0.0.0"
+authors.workspace = true
+edition.workspace = true
+license = "Apache-2.0"
+description = "Rococo emulated chain"
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+serde_json = "1.0.111"
+
+# Substrate
+sp-core = { path = "../../../../../../polkadot-sdk/substrate/primitives/core", default-features = false }
+sp-runtime = { path = "../../../../../../polkadot-sdk/substrate/primitives/runtime", default-features = false }
+sp-authority-discovery = { path = "../../../../../../polkadot-sdk/substrate/primitives/authority-discovery", default-features = false }
+sp-consensus-babe = { path = "../../../../../../polkadot-sdk/substrate/primitives/consensus/babe", default-features = false }
+beefy-primitives = { package = "sp-consensus-beefy", path = "../../../../../../polkadot-sdk/substrate/primitives/consensus/beefy" }
+grandpa = { package = "sc-consensus-grandpa", path = "../../../../../../polkadot-sdk/substrate/client/consensus/grandpa", default-features = false }
+pallet-im-online = { path = "../../../../../../polkadot-sdk/substrate/frame/im-online", default-features = false }
+
+# Polkadot
+polkadot-primitives = { path = "../../../../../../polkadot-sdk/polkadot/primitives", default-features = false }
+rococo-runtime-constants = { path = "../../../../../../polkadot-sdk/polkadot/runtime/rococo/constants", default-features = false }
+rococo-runtime = { path = "../../../../../../polkadot-sdk/polkadot/runtime/rococo" }
+
+# Cumulus
+parachains-common = { path = "../../../../../../polkadot-sdk/cumulus/parachains/common" }
+emulated-integration-tests-common = { path = "../../../common", default-features = false }

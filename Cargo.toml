@@ -15,6 +15,15 @@ members = [
 	"orml/xcm-support",
 	"pallets/template",
 	"runtime",
+	"integration-tests/emulated/chains/parachains/assets/asset-hub-rococo",
+	 "integration-tests/emulated/chains/parachains/bridges/bridge-hub-rococo",
+	 "integration-tests/emulated/chains/parachains/testing/penpal",
+	 "integration-tests/emulated/chains/parachains/testing/orml",
+	 "integration-tests/emulated/chains/relays/rococo",
+	 "integration-tests/emulated/common",
+	 "integration-tests/emulated/networks/rococo-system",
+	 "integration-tests/emulated/tests/bridges/bridge-hub-rococo",
+	 "integration-tests/emulated/tests/assets/asset-hub-rococo"
 ]
 
 
