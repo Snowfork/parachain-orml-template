@@ -59,9 +59,17 @@ where
 	ReserveProvider: Reserve,
 {
 	fn contains(asset: &Asset, origin: &Location) -> bool {
-		let multi_asset: MultiAsset = asset.clone().try_into().unwrap();
+		let asset_wrapped: Result<MultiAsset, ()> = asset.clone().try_into();
+		if asset_wrapped.is_err() {
+			return false
+		}
+		let multi_asset: MultiAsset = asset_wrapped.unwrap();
 		if let Some(reserve) = ReserveProvider::reserve(&multi_asset) {
-			let location: Location = Location::try_from(reserve).unwrap();
+			let location_wrapped = Location::try_from(reserve);
+			if location_wrapped.is_err() {
+				return false
+			}
+			let location: Location = location_wrapped.unwrap();
 			if location == *origin {
 				return true;
 			}
