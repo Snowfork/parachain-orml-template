@@ -8,7 +8,7 @@ use frame_support::{
 	traits::{ConstU32, ConstU64, Everything, Nothing},
 	PalletId,
 };
-use orml_traits::{currency::MutationHooks, parameter_type_with_key};
+use orml_traits::parameter_type_with_key;
 use sp_core::H256;
 use sp_runtime::{
 	traits::{AccountIdConversion, IdentityLookup},
@@ -17,19 +17,18 @@ use sp_runtime::{
 
 use crate as currencies;
 
-pub type ReserveIdentifier = [u8; 8];
-
 pub type AccountId = AccountId32;
+
 #[derive_impl(frame_system::config_preludes::TestDefaultConfig as frame_system::DefaultConfig)]
 impl frame_system::Config for Runtime {
 	type RuntimeOrigin = RuntimeOrigin;
 	type RuntimeCall = RuntimeCall;
 	type Nonce = u64;
+	type Block = Block;
 	type Hash = H256;
 	type Hashing = ::sp_runtime::traits::BlakeTwo256;
 	type AccountId = AccountId;
 	type Lookup = IdentityLookup<Self::AccountId>;
-	type Block = Block;
 	type RuntimeEvent = RuntimeEvent;
 	type BlockHashCount = ConstU64<250>;
 	type BlockWeights = ();
@@ -58,18 +57,18 @@ impl pallet_balances::Config for Runtime {
 	type AccountStore = frame_system::Pallet<Runtime>;
 	type MaxLocks = ();
 	type MaxReserves = ConstU32<2>;
-	type ReserveIdentifier = ReserveIdentifier;
+	type ReserveIdentifier = [u8; 8];
 	type WeightInfo = ();
-	type RuntimeHoldReason = RuntimeHoldReason;
-	type RuntimeFreezeReason = RuntimeFreezeReason;
-	type FreezeIdentifier = [u8; 8];
-	type MaxHolds = ();
+	type FreezeIdentifier = ();
 	type MaxFreezes = ();
+	type MaxHolds = ();
+	type RuntimeHoldReason = ();
+	type RuntimeFreezeReason = ();
 }
 
 parameter_type_with_key! {
 	pub ExistentialDeposits: |_currency_id: CurrencyId| -> Balance {
-		Default::default()
+		3
 	};
 }
 
@@ -77,21 +76,7 @@ parameter_types! {
 	pub DustAccount: AccountId = PalletId(*b"orml/dst").into_account_truncating();
 }
 
-pub struct CurrencyHooks<T>(marker::PhantomData<T>);
-impl<T: orml_tokens::Config> MutationHooks<T::AccountId, T::CurrencyId, T::Balance>
-	for CurrencyHooks<T>
-where
-	T::AccountId: From<AccountId32>,
-{
-	type OnDust = orml_tokens::TransferDust<T, DustAccount>;
-	type OnSlash = ();
-	type PreDeposit = ();
-	type PostDeposit = ();
-	type PreTransfer = ();
-	type PostTransfer = ();
-	type OnNewTokenAccount = ();
-	type OnKilledTokenAccount = ();
-}
+pub type ReserveIdentifier = [u8; 8];
 
 impl orml_tokens::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
@@ -100,7 +85,8 @@ impl orml_tokens::Config for Runtime {
 	type CurrencyId = CurrencyId;
 	type WeightInfo = ();
 	type ExistentialDeposits = ExistentialDeposits;
-	type CurrencyHooks = CurrencyHooks<Runtime>;
+	type CurrencyHooks = ();
+	//type OnDust = orml_tokens::TransferDust<Runtime, DustAccount>; // TODO: implement the hook
 	type MaxLocks = ConstU32<100_000>;
 	type MaxReserves = ConstU32<100_000>;
 	type ReserveIdentifier = ReserveIdentifier;
@@ -115,6 +101,7 @@ parameter_types! {
 }
 
 impl Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
 	type MultiCurrency = Tokens;
 	type NativeCurrency = AdaptedBasicCurrency;
 	type GetNativeCurrencyId = GetNativeCurrencyId;
@@ -126,7 +113,8 @@ pub type AdaptedBasicCurrency = BasicCurrencyAdapter<Runtime, PalletBalances, i6
 type Block = frame_system::mocking::MockBlock<Runtime>;
 
 construct_runtime!(
-	pub enum Runtime {
+	pub enum Runtime
+	{
 		System: frame_system,
 		Currencies: currencies,
 		Tokens: orml_tokens,

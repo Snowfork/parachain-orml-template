@@ -7,23 +7,25 @@ repository = "https://github.com/snowfork/snowbridge.git"
 resolver = "2"
 members = [
 	"node",
-	"orml/currencies",
 	"orml/tokens",
 	"orml/tokens/runtime-api",
 	"orml/traits",
 	"orml/utilities",
 	"orml/xcm-support",
+	"primitives",
 	"pallets/template",
+	"pallets/currencies",
+	"pallets/asset-registry",
 	"runtime",
 	"integration-tests/emulated/chains/parachains/assets/asset-hub-rococo",
-	 "integration-tests/emulated/chains/parachains/bridges/bridge-hub-rococo",
-	 "integration-tests/emulated/chains/parachains/testing/penpal",
-	 "integration-tests/emulated/chains/parachains/testing/orml",
-	 "integration-tests/emulated/chains/relays/rococo",
-	 "integration-tests/emulated/common",
-	 "integration-tests/emulated/networks/rococo-system",
-	 "integration-tests/emulated/tests/bridges/bridge-hub-rococo",
-	 "integration-tests/emulated/tests/assets/asset-hub-rococo"
+	"integration-tests/emulated/chains/parachains/bridges/bridge-hub-rococo",
+	"integration-tests/emulated/chains/parachains/testing/penpal",
+	"integration-tests/emulated/chains/parachains/testing/orml",
+	"integration-tests/emulated/chains/relays/rococo",
+	"integration-tests/emulated/common",
+	"integration-tests/emulated/networks/rococo-system",
+	"integration-tests/emulated/tests/bridges/bridge-hub-rococo",
+	"integration-tests/emulated/tests/assets/asset-hub-rococo",
 ]
 
 

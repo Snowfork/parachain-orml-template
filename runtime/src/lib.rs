@@ -9,8 +9,10 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 mod weights;
 pub mod xcm_config;
 
+use codec::{Decode, Encode, MaxEncodedLen};
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
 use polkadot_runtime_common::xcm_sender::NoPriceForMessageDelivery;
+use scale_info::TypeInfo;
 use smallvec::smallvec;
 use sp_api::impl_runtime_apis;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
@@ -43,8 +45,10 @@ use frame_system::{
 	limits::{BlockLength, BlockWeights},
 	EnsureRoot,
 };
+use orml_traits::currency::MutationHooks;
 use pallet_xcm::{EnsureXcm, IsVoiceOfBody};
 use parachains_common::message_queue::{NarrowOriginToSibling, ParaIdToSibling};
+use primitives::{Amount, AssetId};
 pub use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 pub use sp_runtime::{MultiAddress, Perbill, Permill};
 use xcm_config::{RelayLocation, XcmOriginToTransactDispatchOrigin};
@@ -491,6 +495,50 @@ impl pallet_parachain_orml_template::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 }
 
+#[derive(Debug, Default, Encode, Decode, Clone, PartialEq, Eq, TypeInfo, MaxEncodedLen)]
+pub struct AssetLocation(pub xcm::v3::MultiLocation);
+
+parameter_types! {
+	pub const RegistryStrLimit: u32 = 32;
+	pub const SequentialIdOffset: u32 = 1_000_000;
+	pub const NativeAssetId : AssetId = 0;
+}
+
+impl pallet_asset_registry::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type RegistryOrigin = EnsureRoot<AccountId>;
+	type AssetId = AssetId;
+	type Balance = Balance;
+	type AssetNativeLocation = AssetLocation;
+	type StringLimit = RegistryStrLimit;
+	type SequentialIdStartAt = SequentialIdOffset;
+	type NativeAssetId = NativeAssetId;
+	type WeightInfo = ();
+}
+
+impl orml_tokens::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Balance = Balance;
+	type Amount = Amount;
+	type CurrencyId = AssetId;
+	type WeightInfo = ();
+	type ExistentialDeposits = AssetRegistry;
+	type CurrencyHooks = ();
+	type MaxLocks = ();
+	type MaxReserves = ();
+	type ReserveIdentifier = [u8; 8];
+	type DustRemovalWhitelist = frame_support::traits::Nothing;
+}
+
+use pallet_currencies::BasicCurrencyAdapter;
+impl pallet_currencies::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type MultiCurrency = Tokens;
+	type NativeCurrency = BasicCurrencyAdapter<Runtime, Balances, Amount, BlockNumber>;
+	type GetNativeCurrencyId = NativeAssetId;
+	type WeightInfo = ();
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime {
@@ -522,6 +570,11 @@ construct_runtime!(
 
 		// Template
 		TemplatePallet: pallet_parachain_orml_template = 50,
+
+		// ORML related modules
+		AssetRegistry: pallet_asset_registry = 51,
+		Tokens: orml_tokens = 77,
+		Currencies: pallet_currencies = 79,
 	}
 );
 
