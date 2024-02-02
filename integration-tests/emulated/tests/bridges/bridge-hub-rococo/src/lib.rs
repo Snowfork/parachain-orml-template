@@ -46,6 +46,7 @@ pub use parachains_common::{AccountId, Balance};
 pub use rococo_system_emulated_network::{
 	asset_hub_rococo_emulated_chain::{
 		genesis::ED as ASSET_HUB_ROCOCO_ED, AssetHubRococoParaPallet as AssetHubRococoPallet,
+		PARA_ID as AssetHubParaId,
 	},
 	bridge_hub_rococo_emulated_chain::{
 		genesis::ED as BRIDGE_HUB_ROCOCO_ED, BridgeHubRococoParaPallet as BridgeHubRococoPallet,

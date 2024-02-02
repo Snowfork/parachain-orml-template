@@ -18,10 +18,12 @@ use sp_core::{sr25519, storage::Storage};
 
 // Cumulus
 use emulated_integration_tests_common::{
-	accounts, build_genesis_storage, collators, get_account_id_from_seed, SAFE_XCM_VERSION,
+	accounts,
+	accounts::{ALICE, BOB},
+	build_genesis_storage, collators, get_account_id_from_seed, SAFE_XCM_VERSION,
 };
 use parachains_common::Balance;
-use primitives::WETH;
+use primitives::{ROC, WETH};
 
 // Penpal
 pub const PARA_ID: u32 = 3000;
@@ -62,9 +64,18 @@ pub fn genesis(para_id: u32) -> Storage {
 			key: Some(get_account_id_from_seed::<sr25519::Public>("Alice")),
 		},
 		asset_registry: parachain_orml_template_runtime::AssetRegistryConfig {
-			registered_assets: vec![(b"WETH".to_vec(), 1_000u128, Some(WETH))],
+			registered_assets: vec![
+				(b"WETH".to_vec(), 1_000u128, Some(WETH)),
+				(b"ROC".to_vec(), 1_000u128, Some(ROC)),
+			],
 			native_asset_name: b"ORML".to_vec(),
 			native_existential_deposit: parachain_orml_template_runtime::EXISTENTIAL_DEPOSIT,
+		},
+		tokens: parachain_orml_template_runtime::TokensConfig {
+			balances: vec![
+				(get_account_id_from_seed::<sr25519::Public>(ALICE), ROC, 1_000_000_000_000),
+				(get_account_id_from_seed::<sr25519::Public>(BOB), ROC, 1_000_000_000_000),
+			],
 		},
 		..Default::default()
 	};

@@ -1,5 +1,6 @@
 use sp_runtime::DispatchError;
 use sp_std::vec::Vec;
+#[allow(deprecated)]
 use xcm::{
 	v3::{prelude::*, Weight},
 	VersionedMultiAsset, VersionedMultiAssets, VersionedMultiLocation,
@@ -68,9 +69,17 @@ pub trait XcmTransfer<AccountId, Balance, CurrencyId> {
 	) -> Result<Transferred<AccountId>, DispatchError>;
 }
 
+#[allow(deprecated)]
 pub trait XtokensWeightInfo<AccountId, Balance, CurrencyId> {
-	fn weight_of_transfer_multiasset(asset: &VersionedMultiAsset, dest: &VersionedMultiLocation) -> Weight;
-	fn weight_of_transfer(currency_id: CurrencyId, amount: Balance, dest: &VersionedMultiLocation) -> Weight;
+	fn weight_of_transfer_multiasset(
+		asset: &VersionedMultiAsset,
+		dest: &VersionedMultiLocation,
+	) -> Weight;
+	fn weight_of_transfer(
+		currency_id: CurrencyId,
+		amount: Balance,
+		dest: &VersionedMultiLocation,
+	) -> Weight;
 	fn weight_of_transfer_multicurrencies(
 		currencies: &[(CurrencyId, Balance)],
 		fee_item: &u32,

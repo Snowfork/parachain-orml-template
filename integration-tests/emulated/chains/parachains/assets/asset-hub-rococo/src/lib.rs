@@ -14,6 +14,7 @@
 // limitations under the License.
 
 pub mod genesis;
+pub use genesis::PARA_ID;
 
 // Substrate
 use frame_support::traits::OnInitialize;

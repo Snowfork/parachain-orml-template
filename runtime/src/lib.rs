@@ -45,7 +45,6 @@ use frame_system::{
 	limits::{BlockLength, BlockWeights},
 	EnsureRoot,
 };
-use orml_traits::currency::MutationHooks;
 use pallet_xcm::{EnsureXcm, IsVoiceOfBody};
 use parachains_common::message_queue::{NarrowOriginToSibling, ParaIdToSibling};
 use primitives::{Amount, AssetId};
@@ -496,7 +495,7 @@ impl pallet_parachain_orml_template::Config for Runtime {
 }
 
 #[derive(Debug, Default, Encode, Decode, Clone, PartialEq, Eq, TypeInfo, MaxEncodedLen)]
-pub struct AssetLocation(pub xcm::v3::MultiLocation);
+pub struct AssetLocation(pub Location);
 
 parameter_types! {
 	pub const RegistryStrLimit: u32 = 32;
@@ -531,6 +530,8 @@ impl orml_tokens::Config for Runtime {
 }
 
 use pallet_currencies::BasicCurrencyAdapter;
+use xcm::prelude::Location;
+
 impl pallet_currencies::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type MultiCurrency = Tokens;

@@ -17,15 +17,8 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use frame_support::sp_runtime::FixedU128;
-
 /// Opaque, encoded, unchecked extrinsic.
 pub use frame_support::sp_runtime::OpaqueExtrinsic as UncheckedExtrinsic;
-use frame_support::sp_runtime::{
-	generic,
-	traits::{BlakeTwo256, IdentifyAccount, Verify},
-	MultiSignature,
-};
 
 use sp_std::vec::Vec;
 pub trait Registry<AssetId, AssetName, Balance, Error> {
@@ -90,4 +83,5 @@ pub type AssetId = u32;
 /// Signed version of Balance
 pub type Amount = i128;
 
+pub const ROC: AssetId = 1;
 pub const WETH: AssetId = 1000;

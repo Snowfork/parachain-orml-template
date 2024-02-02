@@ -1,29 +1,42 @@
 use frame_support::pallet_prelude::*;
 use sp_runtime::DispatchResult;
 use sp_std::fmt::Debug;
-use xcm::v3::prelude::*;
-use xcm::VersionedMultiLocation;
+#[allow(deprecated)]
+use xcm::{v3::prelude::*, VersionedMultiLocation};
 
+#[allow(deprecated)]
 pub trait WeightToFeeConverter {
 	fn convert_weight_to_fee(location: &MultiLocation, weight: Weight) -> Option<u128>;
 }
 
+#[allow(deprecated)]
 pub trait FixedConversionRateProvider {
 	fn get_fee_per_second(location: &MultiLocation) -> Option<u128>;
 }
 
 pub trait AssetProcessor<AssetId, Metadata> {
-	fn pre_register(id: Option<AssetId>, asset_metadata: Metadata) -> Result<(AssetId, Metadata), DispatchError>;
+	fn pre_register(
+		id: Option<AssetId>,
+		asset_metadata: Metadata,
+	) -> Result<(AssetId, Metadata), DispatchError>;
 	fn post_register(_id: AssetId, _asset_metadata: Metadata) -> Result<(), DispatchError> {
 		Ok(())
 	}
 }
 
 /// Data describing the asset properties.
-#[derive(TypeInfo, Encode, Decode, CloneNoBound, EqNoBound, PartialEqNoBound, RuntimeDebugNoBound, MaxEncodedLen)]
+#[derive(
+	TypeInfo,
+	Encode,
+	Decode,
+	CloneNoBound,
+	EqNoBound,
+	PartialEqNoBound,
+	RuntimeDebugNoBound,
+	MaxEncodedLen,
+)]
 #[codec(mel_bound(skip_type_params(StringLimit)))]
 #[scale_info(skip_type_params(StringLimit))]
-
 pub struct AssetMetadata<Balance, CustomMetadata, StringLimit: Get<u32>>
 where
 	Balance: Clone + Debug + Eq + PartialEq,
@@ -33,10 +46,11 @@ where
 	pub name: BoundedVec<u8, StringLimit>,
 	pub symbol: BoundedVec<u8, StringLimit>,
 	pub existential_deposit: Balance,
+	#[allow(deprecated)]
 	pub location: Option<VersionedMultiLocation>,
 	pub additional: CustomMetadata,
 }
-
+#[allow(deprecated)]
 pub trait Inspect {
 	/// AssetId type
 	type AssetId;
@@ -56,7 +70,7 @@ pub trait Inspect {
 	) -> Option<AssetMetadata<Self::Balance, Self::CustomMetadata, Self::StringLimit>>;
 	fn location(asset_id: &Self::AssetId) -> Result<Option<MultiLocation>, DispatchError>;
 }
-
+#[allow(deprecated)]
 pub trait Mutate: Inspect {
 	fn register_asset(
 		asset_id: Option<Self::AssetId>,

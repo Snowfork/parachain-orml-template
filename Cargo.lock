@@ -8373,6 +8373,7 @@ dependencies = [
  "log",
  "orml-tokens",
  "orml-traits",
+ "orml-xcm-support",
  "pallet-asset-registry",
  "pallet-aura",
  "pallet-authorship",

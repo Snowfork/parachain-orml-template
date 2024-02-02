@@ -30,6 +30,7 @@ pallet-asset-registry = { path = "../pallets/asset-registry", default-features =
 orml-tokens = { path = "../orml/tokens", default-features = false }
 primitives = { path = "../primitives", default-features = false }
 orml-traits = { path = "../orml/traits", default-features = false }
+orml-xcm-support = { path = "../orml/xcm-support", default-features = false }
 pallet-currencies = { path = "../pallets/currencies", default-features = false }
 
 # Substrate
@@ -141,6 +142,7 @@ std = [
 	"orml-traits/std",
 	"pallet-asset-registry/std",
 	"pallet-currencies/std",
+	"orml-xcm-support/std",
 ]
 
 runtime-benchmarks = [
