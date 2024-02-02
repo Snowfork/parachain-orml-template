@@ -5,10 +5,7 @@
 use super::*;
 use frame_support::{
 	construct_runtime, derive_impl, parameter_types,
-	traits::{
-		tokens::{PayFromAccount, UnityAssetBalanceConversion},
-		ChangeMembers, ConstU32, ConstU64, ContainsLengthBound, Everything, SortedMembers,
-	},
+	traits::{ChangeMembers, ConstU32, ConstU64, ContainsLengthBound, Everything, SortedMembers},
 	PalletId,
 };
 use orml_traits::parameter_type_with_key;
@@ -31,10 +28,8 @@ pub const ALICE: AccountId = AccountId32::new([0u8; 32]);
 pub const BOB: AccountId = AccountId32::new([1u8; 32]);
 pub const CHARLIE: AccountId = AccountId32::new([2u8; 32]);
 pub const DAVE: AccountId = AccountId32::new([3u8; 32]);
-pub const TREASURY_ACCOUNT: AccountId = AccountId32::new([4u8; 32]);
 pub const ID_1: LockIdentifier = *b"1       ";
 pub const ID_2: LockIdentifier = *b"2       ";
-pub const ID_3: LockIdentifier = *b"3       ";
 pub const RID_1: ReserveIdentifier = [1u8; 8];
 pub const RID_2: ReserveIdentifier = [2u8; 8];
 

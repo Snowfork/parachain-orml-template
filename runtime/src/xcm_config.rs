@@ -17,7 +17,7 @@ use parachains_common::impls::AssetsFrom;
 use polkadot_parachain_primitives::primitives::Sibling;
 use polkadot_runtime_common::impls::ToAuthor;
 use sp_runtime::traits::{AccountIdConversion, Convert};
-use std::marker::PhantomData;
+use sp_std::marker::PhantomData;
 use xcm::prelude::{
 	Asset, AssetId, BodyId, Ethereum, Fungible, GeneralIndex, GlobalConsensus, InteriorLocation,
 	Location, NetworkId, PalletInstance, Parachain, Parent, Plurality,
