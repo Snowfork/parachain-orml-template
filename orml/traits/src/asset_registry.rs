@@ -1,6 +1,7 @@
 use frame_support::pallet_prelude::*;
 use sp_runtime::DispatchResult;
 use sp_std::fmt::Debug;
+use xcm::VersionedLocation;
 #[allow(deprecated)]
 use xcm::{v3::prelude::*, VersionedMultiLocation};
 
@@ -46,8 +47,7 @@ where
 	pub name: BoundedVec<u8, StringLimit>,
 	pub symbol: BoundedVec<u8, StringLimit>,
 	pub existential_deposit: Balance,
-	#[allow(deprecated)]
-	pub location: Option<VersionedMultiLocation>,
+	pub location: Option<VersionedLocation>,
 	pub additional: CustomMetadata,
 }
 #[allow(deprecated)]
