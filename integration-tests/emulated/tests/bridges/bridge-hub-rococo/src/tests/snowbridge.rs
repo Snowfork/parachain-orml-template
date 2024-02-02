@@ -544,6 +544,13 @@ fn send_token_from_ethereum_to_asset_hub_fail_for_insufficient_fund() {
 
 #[test]
 fn send_token_from_ethereum_to_orml_chain() {
+	AssetHubRococo::force_default_xcm_version(Some(XCM_VERSION));
+	BridgeHubRococo::force_default_xcm_version(Some(XCM_VERSION));
+	OrmlTemplatePara::force_default_xcm_version(Some(XCM_VERSION));
+	AssetHubRococo::force_xcm_version(
+		Location::new(2, [GlobalConsensus(Ethereum { chain_id: CHAIN_ID })]),
+		XCM_VERSION,
+	);
 	let asset_hub_sovereign = BridgeHubRococo::sovereign_account_id_of(Location::new(
 		1,
 		[Parachain(AssetHubRococo::para_id().into())],
@@ -551,7 +558,7 @@ fn send_token_from_ethereum_to_orml_chain() {
 	// Fund AssetHub sovereign account so it can pay execution fees for the asset transfer
 	BridgeHubRococo::fund_accounts(vec![(asset_hub_sovereign.clone(), INITIAL_FUND)]);
 
-	// Fund PenPal sender and receiver
+	// Fund sender and receiver on OrmlTemplate chain
 	OrmlTemplatePara::fund_accounts(vec![
 		(OrmlReceiver::get(), INITIAL_FUND),
 		(OrmlSender::get(), INITIAL_FUND),
@@ -567,6 +574,7 @@ fn send_token_from_ethereum_to_orml_chain() {
 	let ethereum_sovereign: AccountId =
 		GlobalConsensusEthereumConvertsFor::<AccountId>::convert_location(&origin_location)
 			.unwrap();
+	// Fund ORML sovereign on AssetHub
 	let orml_sovereign_on_asset_hub = AssetHubRococo::sovereign_account_id_of(Location::new(
 		1,
 		[Parachain(OrmlTemplatePara::para_id().into())],
@@ -576,7 +584,7 @@ fn send_token_from_ethereum_to_orml_chain() {
 		(orml_sovereign_on_asset_hub.clone(), INITIAL_FUND),
 	]);
 
-	// Register asset location on the Orml parachain.
+	// Register WETH and ROC(as fee asset) on OrmlTemplate chain.
 	OrmlTemplatePara::execute_with(|| {
 		use parachain_orml_template_runtime::{AssetRegistry, RuntimeOrigin};
 		use primitives::{ROC, WETH};
@@ -655,7 +663,7 @@ fn send_token_from_ethereum_to_orml_chain() {
 			&OrmlReceiver::get(),
 		);
 		assert_eq!(free_balance, WETH_AMOUNT);
-		// Send the Weth back to Ethereum
+		// Send the Weth back to AssetHub, with ROC as fee asset
 		let fee_asset = Asset { id: AssetId(Parent.into()), fun: Fungible(XCM_FEE) };
 		let weth_asset = Asset {
 			id: AssetId(Location::new(
@@ -698,6 +706,7 @@ fn send_token_from_ethereum_to_orml_chain() {
 
 	AssetHubRococo::execute_with(|| {
 		type RuntimeEvent = <AssetHubRococo as Chain>::RuntimeEvent;
+		type RuntimeOrigin = <AssetHubRococo as Chain>::RuntimeOrigin;
 		// Check that weth was burned from orml-sovereign account on AssetHub
 		// and issued into the destination account
 		assert_expected_events!(
@@ -709,6 +718,46 @@ fn send_token_from_ethereum_to_orml_chain() {
 				RuntimeEvent::ForeignAssets(pallet_assets::Event::Issued { owner ,.. }) => {
 					owner: *owner == AssetHubRococoReceiver::get(),
 				},
+			]
+		);
+		// Send the WETH back from AssetHub to Ethereum
+		let assets = vec![Asset {
+			id: AssetId(Location::new(
+				2,
+				[
+					GlobalConsensus(Ethereum { chain_id: CHAIN_ID }),
+					AccountKey20 { network: None, key: WETH },
+				],
+			)),
+			fun: Fungible(WETH_AMOUNT),
+		}];
+		let multi_assets = VersionedAssets::V4(Assets::from(assets));
+		let destination = VersionedLocation::V4(Location::new(
+			2,
+			[GlobalConsensus(Ethereum { chain_id: CHAIN_ID })],
+		));
+		let beneficiary = VersionedLocation::V4(Location::new(
+			0,
+			[AccountKey20 { network: None, key: ETHEREUM_DESTINATION_ADDRESS.into() }],
+		));
+		<AssetHubRococo as AssetHubRococoPallet>::PolkadotXcm::reserve_transfer_assets(
+			RuntimeOrigin::signed(AssetHubRococoReceiver::get()),
+			Box::new(destination),
+			Box::new(beneficiary),
+			Box::new(multi_assets),
+			0,
+		)
+		.unwrap();
+	});
+
+	BridgeHubRococo::execute_with(|| {
+		type RuntimeEvent = <BridgeHubRococo as Chain>::RuntimeEvent;
+		// Check that the transfer token back to Ethereum message was queue in the Ethereum
+		// Outbound Queue
+		assert_expected_events!(
+			BridgeHubRococo,
+			vec![
+				RuntimeEvent::EthereumOutboundQueue(snowbridge_pallet_outbound_queue::Event::MessageQueued {..}) => {},
 			]
 		);
 	});
