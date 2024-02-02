@@ -14,7 +14,7 @@
 // limitations under the License.
 
 mod genesis;
-pub use genesis::{genesis, ED, PARA_ID_A, PARA_ID_B};
+pub use genesis::{genesis, ED, PARA_ID};
 pub use parachain_orml_template_runtime::xcm_config::XcmConfig;
 
 // Substrate
@@ -30,7 +30,7 @@ use rococo_emulated_chain::Rococo;
 // Penpal Parachain declaration
 decl_test_parachains! {
 	pub struct OrmlTemplate {
-		genesis = genesis(PARA_ID_A),
+		genesis = genesis(PARA_ID),
 		on_init = {
 			parachain_orml_template_runtime::AuraExt::on_initialize(1);
 		},
@@ -44,6 +44,7 @@ decl_test_parachains! {
 		pallets = {
 			PolkadotXcm: parachain_orml_template_runtime::PolkadotXcm,
 			Balances: parachain_orml_template_runtime::Balances,
+			AssetRegistry: parachain_orml_template_runtime::AssetRegistry,
 		}
 	},
 }

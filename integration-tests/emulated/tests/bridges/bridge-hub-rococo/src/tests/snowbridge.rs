@@ -31,7 +31,9 @@ use snowbridge_pallet_inbound_queue_fixtures::{
 	InboundQueueFixture,
 };
 use snowbridge_pallet_system;
-use snowbridge_router_primitives::inbound::GlobalConsensusEthereumConvertsFor;
+use snowbridge_router_primitives::inbound::{
+	Command, Destination, GlobalConsensusEthereumConvertsFor, MessageV1, VersionedMessage,
+};
 use sp_core::H256;
 use sp_runtime::{ArithmeticError::Underflow, DispatchError::Arithmetic};
 
@@ -573,8 +575,16 @@ fn send_token_from_ethereum_to_orml_chain() {
 			.unwrap();
 	AssetHubRococo::fund_accounts(vec![(ethereum_sovereign.clone(), INITIAL_FUND)]);
 
-	// Todo: Create asset on the Orml parachain.
-	OrmlTemplatePara::execute_with(|| {});
+	// Register asset location on the Orml parachain.
+	OrmlTemplatePara::execute_with(|| {
+		use parachain_orml_template_runtime::{AssetRegistry, RuntimeOrigin};
+		use primitives::WETH;
+		AssetRegistry::set_location(
+			RuntimeOrigin::root(),
+			WETH,
+			parachain_orml_template_runtime::AssetLocation(weth_asset_id),
+		);
+	});
 
 	BridgeHubRococo::execute_with(|| {
 		type RuntimeEvent = <BridgeHubRococo as Chain>::RuntimeEvent;
@@ -582,8 +592,25 @@ fn send_token_from_ethereum_to_orml_chain() {
 		// Construct RegisterToken message and sent to inbound queue
 		send_inbound_message(make_register_token_message()).unwrap();
 
-		// Todo: Construct SendToken message and sent to inbound queue
-		// send_inbound_message(make_send_token_to_penpal_message()).unwrap();
+		// Construct SendToken message and sent to inbound queue
+		let message_id: H256 = [1; 32].into();
+		let message = VersionedMessage::V1(MessageV1 {
+			chain_id: CHAIN_ID,
+			command: Command::SendToken {
+				token: WETH.into(),
+				destination: Destination::ForeignAccountId32 {
+					para_id: OrmlParaId,
+					id: OrmlReceiver::get().into(),
+					fee: XCM_FEE,
+				},
+				amount: 1_000_000_000,
+				fee: XCM_FEE,
+			},
+		});
+		// Convert the message to XCM
+		let (xcm, _) = EthereumInboundQueue::do_convert(message_id, message).unwrap();
+		// Send the XCM
+		let _ = EthereumInboundQueue::send_xcm(xcm, AssetHubRococo::para_id().into()).unwrap();
 
 		assert_expected_events!(
 			BridgeHubRococo,
@@ -596,13 +623,13 @@ fn send_token_from_ethereum_to_orml_chain() {
 	AssetHubRococo::execute_with(|| {
 		type RuntimeEvent = <AssetHubRococo as Chain>::RuntimeEvent;
 		// Todo: Check that the assets were issued on AssetHub
-		// assert_expected_events!(
-		// 	AssetHubRococo,
-		// 	vec![
-		// 		RuntimeEvent::ForeignAssets(pallet_assets::Event::Issued { .. }) => {},
-		// 		RuntimeEvent::XcmpQueue(cumulus_pallet_xcmp_queue::Event::XcmpMessageSent { .. }) => {},
-		// 	]
-		// );
+		assert_expected_events!(
+			AssetHubRococo,
+			vec![
+				RuntimeEvent::ForeignAssets(pallet_assets::Event::Issued { .. }) => {},
+				RuntimeEvent::XcmpQueue(cumulus_pallet_xcmp_queue::Event::XcmpMessageSent { .. }) => {},
+			]
+		);
 	});
 
 	OrmlTemplatePara::execute_with(|| {

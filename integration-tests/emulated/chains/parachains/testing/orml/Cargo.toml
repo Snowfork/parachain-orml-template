@@ -26,3 +26,10 @@ cumulus-primitives-core = { path = "../../../../../../../polkadot-sdk/cumulus/pr
 emulated-integration-tests-common = { path = "../../../../common", default-features = false }
 parachain-orml-template-runtime = { path = "../../../../../../runtime" }
 rococo-emulated-chain = { path = "../../../relays/rococo" }
+
+# Orml
+pallet-asset-registry = { path = "../../../../../../pallets/asset-registry", default-features = false }
+orml-tokens = { path = "../../../../../../orml/tokens", default-features = false }
+primitives = { path = "../../../../../../primitives", default-features = false }
+orml-traits = { path = "../../../../../../orml/traits", default-features = false }
+pallet-currencies = { path = "../../../../../../pallets/currencies", default-features = false }

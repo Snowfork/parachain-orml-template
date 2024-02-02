@@ -89,3 +89,5 @@ pub type AssetId = u32;
 
 /// Signed version of Balance
 pub type Amount = i128;
+
+pub const WETH: AssetId = 1000;

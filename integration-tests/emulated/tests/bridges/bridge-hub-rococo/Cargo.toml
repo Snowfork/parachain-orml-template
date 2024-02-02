@@ -44,7 +44,6 @@ emulated-integration-tests-common = { path = "../../../common", default-features
 rococo-system-emulated-network = { path = "../../../networks/rococo-system" }
 penpal-runtime = { path = "../../../../../../polkadot-sdk/cumulus/parachains/runtimes/testing/penpal", default-features = false }
 asset-hub-rococo-runtime = { path = "../../../../../../polkadot-sdk/cumulus/parachains/runtimes/assets/asset-hub-rococo", default-features = false }
-parachain-orml-template-runtime = { path = "../../../../../runtime", default-features = false }
 
 # Snowbridge
 snowbridge-core = { path = "../../../../../../parachain/primitives/core", default-features = false }
@@ -53,3 +52,11 @@ snowbridge-pallet-system = { path = "../../../../../../parachain/pallets/system"
 snowbridge-pallet-outbound-queue = { path = "../../../../../../parachain/pallets/outbound-queue", default-features = false }
 snowbridge-pallet-inbound-queue = { path = "../../../../../../parachain/pallets/inbound-queue", default-features = false }
 snowbridge-pallet-inbound-queue-fixtures = { path = "../../../../../../parachain/pallets/inbound-queue/fixtures" }
+
+# Orml
+parachain-orml-template-runtime = { path = "../../../../../runtime", default-features = false }
+pallet-asset-registry = { path = "../../../../../pallets/asset-registry", default-features = false }
+orml-tokens = { path = "../../../../../orml/tokens", default-features = false }
+primitives = { path = "../../../../../primitives", default-features = false }
+orml-traits = { path = "../../../../../orml/traits", default-features = false }
+pallet-currencies = { path = "../../../../../pallets/currencies", default-features = false }

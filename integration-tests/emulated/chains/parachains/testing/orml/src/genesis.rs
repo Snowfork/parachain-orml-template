@@ -21,10 +21,10 @@ use emulated_integration_tests_common::{
 	accounts, build_genesis_storage, collators, get_account_id_from_seed, SAFE_XCM_VERSION,
 };
 use parachains_common::Balance;
+use primitives::WETH;
 
 // Penpal
-pub const PARA_ID_A: u32 = 2000;
-pub const PARA_ID_B: u32 = 2001;
+pub const PARA_ID: u32 = 3000;
 pub const ED: Balance = parachain_orml_template_runtime::EXISTENTIAL_DEPOSIT;
 
 pub fn genesis(para_id: u32) -> Storage {
@@ -60,6 +60,11 @@ pub fn genesis(para_id: u32) -> Storage {
 		},
 		sudo: parachain_orml_template_runtime::SudoConfig {
 			key: Some(get_account_id_from_seed::<sr25519::Public>("Alice")),
+		},
+		asset_registry: parachain_orml_template_runtime::AssetRegistryConfig {
+			registered_assets: vec![(b"WETH".to_vec(), 1_000u128, Some(WETH))],
+			native_asset_name: b"ORML".to_vec(),
+			native_existential_deposit: parachain_orml_template_runtime::EXISTENTIAL_DEPOSIT,
 		},
 		..Default::default()
 	};
