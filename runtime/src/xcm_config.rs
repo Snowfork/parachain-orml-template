@@ -1,17 +1,27 @@
 use super::{
-	AccountId, AllPalletsWithSystem, Balances, ParachainInfo, ParachainSystem, PolkadotXcm,
-	Runtime, RuntimeCall, RuntimeEvent, RuntimeOrigin, WeightToFee, XcmpQueue,
+	AccountId, AllPalletsWithSystem, AssetLocation, AssetRegistry, Balance, Balances, Currencies,
+	NativeAssetId, ParachainInfo, ParachainSystem, PolkadotXcm, Runtime, RuntimeCall, RuntimeEvent,
+	RuntimeOrigin, WeightToFee, XcmpQueue,
 };
 use frame_support::{
+	pallet_prelude::Get,
 	parameter_types,
-	traits::{ConstU32, Contains, Everything, Nothing},
+	traits::{ConstU32, Contains, ContainsPair, Everything, Nothing},
 	weights::Weight,
+	PalletId,
 };
 use frame_system::EnsureRoot;
+use orml_xcm_support::{DepositToAlternative, IsNativeConcrete, MultiCurrencyAdapter};
 use pallet_xcm::XcmPassthrough;
+use parachains_common::impls::AssetsFrom;
 use polkadot_parachain_primitives::primitives::Sibling;
 use polkadot_runtime_common::impls::ToAuthor;
-use xcm::latest::prelude::*;
+use sp_runtime::traits::{AccountIdConversion, Convert};
+use std::marker::PhantomData;
+use xcm::prelude::{
+	Asset, AssetId, BodyId, Ethereum, Fungible, GeneralIndex, GlobalConsensus, InteriorLocation,
+	Location, NetworkId, PalletInstance, Parachain, Parent, Plurality,
+};
 #[allow(deprecated)]
 use xcm_builder::CurrencyAdapter;
 use xcm_builder::{
@@ -111,14 +121,101 @@ pub type Barrier = TrailingSetTopicAsId<
 	>,
 >;
 
+parameter_types! {
+	pub SystemAssetHubLocation: Location = Location::new(1, [Parachain(1000)]);
+	pub SystemAssetHubAssetsPalletLocation: Location =
+		Location::new(1, [Parachain(1000), PalletInstance(50)]);
+	pub AssetsPalletLocation: Location =
+		Location::new(0, [PalletInstance(50)]);
+	pub CheckingAccount: AccountId = PolkadotXcm::check_account();
+	pub EthereumLocation: Location = Location::new(2, [GlobalConsensus(Ethereum { chain_id: 11155111 })]);
+	pub TreasuryAccount: AccountId = PalletId(*b"py/trsry").into_account_truncating();
+}
+
+/// Asset filter that allows native/relay asset if coming from a certain location.
+pub struct NativeAssetFrom<T>(PhantomData<T>);
+impl<T: Get<Location>> ContainsPair<Asset, Location> for NativeAssetFrom<T> {
+	fn contains(asset: &Asset, origin: &Location) -> bool {
+		let loc = T::get();
+		&loc == origin &&
+			matches!(asset, Asset { id: xcm::prelude::AssetId(asset_loc), fun: Fungible(_a) }
+			if *asset_loc == Location::from(Parent))
+	}
+}
+
+/// Asset filter that allows all assets from a certain location matching asset id.
+pub struct AssetPrefixFrom<Prefix, Origin>(PhantomData<(Prefix, Origin)>);
+impl<Prefix, Origin> ContainsPair<Asset, Location> for AssetPrefixFrom<Prefix, Origin>
+where
+	Prefix: Get<Location>,
+	Origin: Get<Location>,
+{
+	fn contains(asset: &Asset, origin: &Location) -> bool {
+		let loc = Origin::get();
+		&loc == origin &&
+			matches!(asset, Asset { id: AssetId(asset_loc), fun: Fungible(_a) }
+			if asset_loc.starts_with(&Prefix::get()))
+	}
+}
+
+pub type Reserves = (
+	NativeAsset,
+	AssetsFrom<SystemAssetHubLocation>,
+	NativeAssetFrom<SystemAssetHubLocation>,
+	AssetPrefixFrom<EthereumLocation, SystemAssetHubLocation>,
+);
+
+pub type CurrencyId = primitives::AssetId;
+
+pub struct CurrencyIdConvert;
+
+impl Convert<CurrencyId, Option<Location>> for CurrencyIdConvert {
+	fn convert(id: CurrencyId) -> Option<Location> {
+		match id {
+			id if id == NativeAssetId::get() => Some(Location::new(0, [GeneralIndex(id.into())])),
+			_ => AssetRegistry::asset_to_location(id).map(|loc| loc.0),
+		}
+	}
+}
+
+impl Convert<Location, Option<CurrencyId>> for CurrencyIdConvert {
+	fn convert(location: Location) -> Option<CurrencyId> {
+		match location.unpack() {
+			(0, [GeneralIndex(index)]) if (*index as u32) == NativeAssetId::get() =>
+				Some(*index as CurrencyId),
+			_ => AssetRegistry::location_to_asset(AssetLocation(location)),
+		}
+	}
+}
+
+impl Convert<Asset, Option<CurrencyId>> for CurrencyIdConvert {
+	fn convert(asset: Asset) -> Option<CurrencyId> {
+		Self::convert(asset.id.0)
+	}
+}
+
+pub type AssetTransactor = (
+	MultiCurrencyAdapter<
+		Currencies,
+		(),
+		IsNativeConcrete<CurrencyId, CurrencyIdConvert>,
+		AccountId,
+		LocationToAccountId,
+		CurrencyId,
+		CurrencyIdConvert,
+		DepositToAlternative<TreasuryAccount, Currencies, CurrencyId, AccountId, Balance>,
+	>,
+	LocalAssetTransactor,
+);
+
 pub struct XcmConfig;
 impl xcm_executor::Config for XcmConfig {
 	type RuntimeCall = RuntimeCall;
 	type XcmSender = XcmRouter;
 	// How to withdraw and deposit an asset.
-	type AssetTransactor = LocalAssetTransactor;
+	type AssetTransactor = AssetTransactor;
 	type OriginConverter = XcmOriginToTransactDispatchOrigin;
-	type IsReserve = NativeAsset;
+	type IsReserve = Reserves;
 	type IsTeleporter = (); // Teleporting is disabled.
 	type UniversalLocation = UniversalLocation;
 	type Barrier = Barrier;
@@ -163,7 +260,7 @@ impl pallet_xcm::Config for Runtime {
 	// Needs to be `Everything` for local testing.
 	type XcmExecutor = XcmExecutor<XcmConfig>;
 	type XcmTeleportFilter = Everything;
-	type XcmReserveTransferFilter = Nothing;
+	type XcmReserveTransferFilter = Everything;
 	type Weigher = FixedWeightBounds<UnitWeightCost, RuntimeCall, MaxInstructions>;
 	type UniversalLocation = UniversalLocation;
 	type RuntimeOrigin = RuntimeOrigin;
