@@ -18,10 +18,10 @@ use codec::{Decode, Encode};
 use emulated_integration_tests_common::xcm_emulator::ConvertLocation;
 use frame_support::pallet_prelude::TypeInfo;
 use hex_literal::hex;
+use orml_traits::MultiCurrency;
 use parachains_common::rococo::snowbridge::EthereumNetwork;
 use rococo_system_emulated_network::{
-	orml_emulated_chain::OrmlTemplate, BridgeHubRococoParaSender as BridgeHubRococoSender,
-	OrmlTemplatePara,
+	BridgeHubRococoParaSender as BridgeHubRococoSender, OrmlTemplatePara,
 };
 use snowbridge_core::outbound::OperatingMode;
 use snowbridge_pallet_inbound_queue_fixtures::{
@@ -217,8 +217,6 @@ fn register_weth_token_from_ethereum_to_asset_hub() {
 
 	BridgeHubRococo::execute_with(|| {
 		type RuntimeEvent = <BridgeHubRococo as Chain>::RuntimeEvent;
-		type Runtime = <BridgeHubRococo as Chain>::Runtime;
-		type Balances = <BridgeHubRococo as BridgeHubRococoPallet>::Balances;
 
 		// Construct RegisterToken message and sent to inbound queue
 		let register_token_message = make_register_token_message();
@@ -286,8 +284,6 @@ fn send_token_from_ethereum_to_penpal() {
 
 		assert!(<PenpalA as PenpalAPallet>::ForeignAssets::asset_exists(weth_asset_id));
 	});
-
-	let message_id: H256 = [1; 32].into();
 
 	BridgeHubRococo::execute_with(|| {
 		type RuntimeEvent = <BridgeHubRococo as Chain>::RuntimeEvent;
@@ -564,8 +560,6 @@ fn send_token_from_ethereum_to_orml_chain() {
 	// The Weth asset location, identified by the contract address on Ethereum
 	let weth_asset_location: Location =
 		(Parent, Parent, EthereumNetwork::get(), AccountKey20 { network: None, key: WETH }).into();
-	// Converts the Weth asset location into an asset ID
-	let weth_asset_id: v3::Location = weth_asset_location.try_into().unwrap();
 
 	let origin_location = (Parent, Parent, EthereumNetwork::get()).into();
 
@@ -573,18 +567,32 @@ fn send_token_from_ethereum_to_orml_chain() {
 	let ethereum_sovereign: AccountId =
 		GlobalConsensusEthereumConvertsFor::<AccountId>::convert_location(&origin_location)
 			.unwrap();
-	AssetHubRococo::fund_accounts(vec![(ethereum_sovereign.clone(), INITIAL_FUND)]);
+	let orml_sovereign_on_asset_hub = AssetHubRococo::sovereign_account_id_of(Location::new(
+		1,
+		[Parachain(OrmlTemplatePara::para_id().into())],
+	));
+	AssetHubRococo::fund_accounts(vec![
+		(ethereum_sovereign.clone(), INITIAL_FUND),
+		(orml_sovereign_on_asset_hub.clone(), INITIAL_FUND),
+	]);
 
 	// Register asset location on the Orml parachain.
 	OrmlTemplatePara::execute_with(|| {
 		use parachain_orml_template_runtime::{AssetRegistry, RuntimeOrigin};
-		use primitives::WETH;
-		AssetRegistry::set_location(
+		use primitives::{ROC, WETH};
+		assert_ok!(AssetRegistry::set_location(
 			RuntimeOrigin::root(),
 			WETH,
-			parachain_orml_template_runtime::AssetLocation(weth_asset_id),
-		);
+			parachain_orml_template_runtime::AssetLocation(weth_asset_location),
+		));
+		assert_ok!(AssetRegistry::set_location(
+			RuntimeOrigin::root(),
+			ROC,
+			parachain_orml_template_runtime::AssetLocation(Parent.into()),
+		));
 	});
+
+	const WETH_AMOUNT: u128 = 1_000_000_000;
 
 	BridgeHubRococo::execute_with(|| {
 		type RuntimeEvent = <BridgeHubRococo as Chain>::RuntimeEvent;
@@ -603,7 +611,7 @@ fn send_token_from_ethereum_to_orml_chain() {
 					id: OrmlReceiver::get().into(),
 					fee: XCM_FEE,
 				},
-				amount: 1_000_000_000,
+				amount: WETH_AMOUNT,
 				fee: XCM_FEE,
 			},
 		});
@@ -622,7 +630,7 @@ fn send_token_from_ethereum_to_orml_chain() {
 
 	AssetHubRococo::execute_with(|| {
 		type RuntimeEvent = <AssetHubRococo as Chain>::RuntimeEvent;
-		// Todo: Check that the assets were issued on AssetHub
+		// Check that the assets were issued on AssetHub
 		assert_expected_events!(
 			AssetHubRococo,
 			vec![
@@ -633,13 +641,75 @@ fn send_token_from_ethereum_to_orml_chain() {
 	});
 
 	OrmlTemplatePara::execute_with(|| {
-		type RuntimeEvent = <PenpalA as Chain>::RuntimeEvent;
-		// Todo: Check that the assets were issued on PenPal
-		// assert_expected_events!(
-		// 	PenpalA,
-		// 	vec![
-		// 		RuntimeEvent::ForeignAssets(pallet_assets::Event::Issued { .. }) => {},
-		// 	]
-		// );
+		type RuntimeEvent = <OrmlTemplatePara as Chain>::RuntimeEvent;
+		type RuntimeOrigin = <OrmlTemplatePara as Chain>::RuntimeOrigin;
+		// Check that the assets were issued on OrmlTemplate
+		assert_expected_events!(
+			OrmlTemplatePara,
+			vec![
+				RuntimeEvent::Currencies(pallet_currencies::Event::Deposited { currency_id: primitives::WETH,.. }) => {},
+			]
+		);
+		let free_balance = <OrmlTemplatePara as OrmlPallet>::Currencies::free_balance(
+			primitives::WETH,
+			&OrmlReceiver::get(),
+		);
+		assert_eq!(free_balance, WETH_AMOUNT);
+		// Send the Weth back to Ethereum
+		let fee_asset = Asset { id: AssetId(Parent.into()), fun: Fungible(XCM_FEE) };
+		let weth_asset = Asset {
+			id: AssetId(Location::new(
+				2,
+				[
+					GlobalConsensus(Ethereum { chain_id: CHAIN_ID }),
+					AccountKey20 { network: None, key: WETH },
+				],
+			)),
+			fun: Fungible(WETH_AMOUNT),
+		};
+		let assets = vec![fee_asset, weth_asset];
+		let multi_assets = VersionedAssets::V4(Assets::from(assets));
+
+		let destination = VersionedLocation::V4(Location::new(1, [Parachain(AssetHubParaId)]));
+
+		let beneficiary = VersionedLocation::V4(Location::new(
+			0,
+			[AccountId32 { network: None, id: AssetHubRococoReceiver::get().into() }],
+		));
+		assert_ok!(<OrmlTemplatePara as OrmlPallet>::PolkadotXcm::reserve_transfer_assets(
+			RuntimeOrigin::signed(OrmlReceiver::get()),
+			Box::new(destination),
+			Box::new(beneficiary),
+			Box::new(multi_assets),
+			0,
+		));
+		assert_expected_events!(
+			OrmlTemplatePara,
+			vec![
+				RuntimeEvent::Currencies(pallet_currencies::Event::Withdrawn { currency_id:primitives::WETH,.. }) => {},
+			]
+		);
+		let free_balance_after = <OrmlTemplatePara as OrmlPallet>::Currencies::free_balance(
+			primitives::WETH,
+			&OrmlReceiver::get(),
+		);
+		assert_eq!(free_balance_after, 0);
+	});
+
+	AssetHubRococo::execute_with(|| {
+		type RuntimeEvent = <AssetHubRococo as Chain>::RuntimeEvent;
+		// Check that weth was burned from orml-sovereign account on AssetHub
+		// and issued into the destination account
+		assert_expected_events!(
+			AssetHubRococo,
+			vec![
+				RuntimeEvent::ForeignAssets(pallet_assets::Event::Burned { owner ,.. }) => {
+					owner: *owner == orml_sovereign_on_asset_hub,
+				},
+				RuntimeEvent::ForeignAssets(pallet_assets::Event::Issued { owner ,.. }) => {
+					owner: *owner == AssetHubRococoReceiver::get(),
+				},
+			]
+		);
 	});
 }
